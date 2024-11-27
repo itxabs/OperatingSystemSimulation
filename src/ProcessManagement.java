@@ -23,7 +23,7 @@ public class ProcessManagement extends JFrame {
                 "Wakeup a process",
                 "Dispatch a process",
                 "Change process priority",
-                "Process communication with other"
+                "Other"
         };
         createButtons(sideBarPanel, buttonLabels);
         setExtendedState(JFrame.MAXIMIZED_BOTH);

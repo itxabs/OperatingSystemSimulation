@@ -9,10 +9,15 @@ public class Main extends JFrame {
     Main(){
 
         setTitle("Operating System Simulation");
-        setSize(800, 600);
+        setSize(900, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setVisible(true);
+
+        JLabel ProjectName = new JLabel("Operating System Simulation - Digital Den");
+        ProjectName.setHorizontalAlignment(SwingConstants.CENTER);
+        ProjectName.setFont(new Font("Monospaced", Font.BOLD, 30));
+        ProjectName.setBorder(new EmptyBorder(20, 0, 20, 0));
 
         JPanel mainPanel = new JPanel(new GridLayout(2,2,20,20));
         mainPanel.setBorder(new EmptyBorder(20,20,20,20));
@@ -26,6 +31,7 @@ public class Main extends JFrame {
 
         createButtons(mainPanel, buttonLabels);
 
+        add(ProjectName, BorderLayout.NORTH);
         add(mainPanel);
         setVisible(true);
 
@@ -87,3 +93,6 @@ public class Main extends JFrame {
         new Main();
     }
 }
+
+
+//https://github.com/romainguy/filthy-rich-clients
