@@ -2,20 +2,25 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
-import javax.swing.text.TableView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.LocalTime;
 import java.util.LinkedList;
+
+
 
 public class ProcessManagement extends JPanel {
 
     private static LinkedList<process> processes = new LinkedList<>();
+    private static LinkedList<process> suspendedProcesses = new LinkedList<>();
     int idCounter = 0;
+    int id;
+    int priority;
+    process p;
+    int selectedRow;
 
     private JTable processTable;
     private DefaultTableModel tableModel;
@@ -43,8 +48,13 @@ public class ProcessManagement extends JPanel {
 
         createButtons(sideBarPanel, buttonLabels);
 
-        String[] columnNames = {"Process ID", "Priority", "Status"};
-        tableModel = new DefaultTableModel(columnNames, 0);
+        String[] columnNames = {"Process ID", "Priority","Status","Arrival Time"};
+        tableModel = new DefaultTableModel(columnNames, 0){
+            @Override
+            public boolean isCellEditable(int row, int column){
+                return false;
+            }
+        };
 
         processTable = new JTable(tableModel);
         processTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -57,8 +67,6 @@ public class ProcessManagement extends JPanel {
         tableHeader.setForeground(Color.WHITE);
         tableHeader.setBackground(new Color(54, 81, 94));
         tableHeader.setReorderingAllowed(false);
-
-
 
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(20,20,20,20));
@@ -104,7 +112,7 @@ public class ProcessManagement extends JPanel {
                         case "Dispatch":
                             dispatchProcess();
                             break;
-                        case "SetPriority":
+                        case "Set Priority":
                             setPriority();
                             break;
 
@@ -131,9 +139,78 @@ public class ProcessManagement extends JPanel {
         }
     }
 
+//    private void setPriority() {
+//        selectedRow = processTable.getSelectedRow();
+//        if (selectedRow != -1) {
+//            String status = processTable.getValueAt(selectedRow, 2).toString();
+//            if (!status.equals("Suspended")) {
+//                JOptionPane.showMessageDialog(this, "Please suspend this process first!");
+//            } else if (status.equals("Suspended")){
+//                int getProcessID = (int) processTable.getValueAt(selectedRow, 0);
+//
+//                for (process suspendedProcess : suspendedProcesses) {
+//                    if (suspendedProcess.getProcessId() == getProcessID) {
+//                        try {
+//
+//                            String input = JOptionPane.showInputDialog(this,"Enter priority for process " + getProcessID);
+//
+//                            priority = Integer.parseInt(input);
+//                            suspendedProcess.setPriority(priority);
+//
+//                            tableModel.setValueAt(priority, selectedRow, 1);
+//                            JOptionPane.showMessageDialog(this,"Priority updated for process " + getProcessID);
+//                            return;
+//                        } catch (NumberFormatException e) {
+//                            JOptionPane.showMessageDialog(this,"Invalid input! Please enter a numeric priority.");
+//                        }
+//                    }
+//                }
+//            }else{
+//                JOptionPane.showMessageDialog(this,"Process is not suspended!");
+//            }
+//        } else {
+//            JOptionPane.showMessageDialog(this, "Please select a process to set priority!");
+//        }
+//    }
+
+
     private void setPriority() {
-        JOptionPane.showMessageDialog(this, "Set Priority functionality is under development!");
+        selectedRow = processTable.getSelectedRow();
+        if (selectedRow != -1) {
+            String status = processTable.getValueAt(selectedRow, 2).toString();
+            if (!status.equals("Suspended")) {
+                JOptionPane.showMessageDialog(this, "Please suspend this process first!");
+            } else {
+                int processID = (int) processTable.getValueAt(selectedRow, 0); // Get process ID
+
+                // Find the suspended process and update priority
+                for (process suspendedProcess : suspendedProcesses) {
+                    if (suspendedProcess.getProcessId() == processID) {
+                        try {
+                            String priorityInput = JOptionPane.showInputDialog(
+                                    this, "Enter new priority for process " + processID);
+                            if (priorityInput == null || priorityInput.isEmpty()) {
+                                JOptionPane.showMessageDialog(this, "Priority input is required!");
+                                return;
+                            }
+                            priority = Integer.parseInt(priorityInput); // Validate integer input
+                            suspendedProcess.setPriority(priority); // Update process priority
+
+                            // Update table model
+                            tableModel.setValueAt(priority, selectedRow, 1); // Priority is in column 1
+                            JOptionPane.showMessageDialog(this, "Priority updated successfully!");
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(this, "Invalid input. Please enter an integer value!");
+                        }
+                        break;
+                    }
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select a process to set priority!");
+        }
     }
+
 
     private void dispatchProcess() {
         JOptionPane.showMessageDialog(this, "Dispatch functionality is under development!");
@@ -148,18 +225,75 @@ public class ProcessManagement extends JPanel {
     }
 
     private void resumeProcess() {
-        JOptionPane.showMessageDialog(this, "Resume functionality is under development!");
+        selectedRow = processTable.getSelectedRow();
+        if (selectedRow != -1) {
+
+            String status = processTable.getValueAt(selectedRow, 2).toString();
+            if (status.equals("Ready")) {
+                JOptionPane.showMessageDialog(this, "The process is already ready!");
+            } else if (status.equals("Suspended")) {
+                int getProcessID = (int) processTable.getValueAt(selectedRow, 0);
+
+                for (int i = 0; i < suspendedProcesses.size(); i++) {
+                    process suspendedProcess = suspendedProcesses.get(i);
+                    if (suspendedProcess.getProcessId() == getProcessID) {
+
+                        suspendedProcess.setStatus("Ready");
+                        processes.add(suspendedProcess);
+                        suspendedProcesses.remove(i);
+
+                        tableModel.setValueAt("Ready", selectedRow, 2);
+                        break;
+                    }
+                }
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Please select a process to resume!");
+        }
     }
 
     private void suspendProcess() {
-        JOptionPane.showMessageDialog(this, "Suspend functionality is under development!");
+        selectedRow = processTable.getSelectedRow();
+        if(selectedRow !=-1){
+            if (processTable.getValueAt(selectedRow,2)=="Suspended"){
+                JOptionPane.showMessageDialog(this, "The process is already suspended!");
+
+            }else{
+                int getProcessID = (int) processTable.getValueAt(selectedRow,0);
+                int priority = (int) processTable.getValueAt(selectedRow,1);
+                LocalTime getArrivaltime = (LocalTime) processTable.getValueAt(selectedRow,3);
+                p = new process(getProcessID,priority,"Suspended");
+                p.setArrivalTime(getArrivaltime);
+                suspendedProcesses.add(p);
+                processes.remove(selectedRow);
+                tableModel.removeRow(selectedRow);
+                tableModel.addRow(new Object[]{getProcessID,priority,"Suspended",getArrivaltime});
+            }
+
+        }else {
+            JOptionPane.showMessageDialog(this, "Select the process to suspend!");
+        }
     }
 
     private void destroyProcess() {
-        int selectedRow = processTable.getSelectedRow();
+        selectedRow = processTable.getSelectedRow();
+
         if (selectedRow != -1) {
-            processes.remove(selectedRow);
+
+            int processID = (int) processTable.getValueAt(selectedRow, 0);
+            String status = processTable.getValueAt(selectedRow, 2).toString();
+
+            if ("Suspended".equals(status)) {
+
+                suspendedProcesses.removeIf(process -> process.getProcessId() == processID);
+            } else {
+
+                processes.removeIf(process -> process.getProcessId() == processID);
+            }
+
+
             tableModel.removeRow(selectedRow);
+
         } else {
             JOptionPane.showMessageDialog(this, "Please select a process to destroy!");
         }
@@ -167,12 +301,15 @@ public class ProcessManagement extends JPanel {
 
     private void createProcess() {
 
-        int id = idCounter++;
-        process p = new process(id, 1, "Ready");
-        processes.add(p);
-
-        tableModel.addRow(new Object[]{p.getProcessId(), p.getPriority(), p.getStatus()});
-
+        if(tableModel.getRowCount()<=10){
+            id = idCounter++;
+            priority = Integer.parseInt(JOptionPane.showInputDialog("Enter priority for process " + id));
+            p = new process(id, priority, "New");
+            processes.add(p);
+            tableModel.addRow(new Object[]{p.getProcessId(), p.getPriority(), p.getStatus(),p.getArrivalTime()});
+        }else {
+            JOptionPane.showMessageDialog(this, "Please select a process to destroy!");
+        }
 
     }
 
