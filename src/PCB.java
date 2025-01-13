@@ -1,61 +1,31 @@
-public class PCB {
+public class PCB extends process {
 
-    private int processId;
-    private String state;
-    private String ownerofProcess;
-    private int priority;
-    private String memoryRequirment;
+    private String ownerOfProcess;
+    private String memoryRequirement;
     private String ioInformation;
 
-
-    public PCB(int processId, String state, String ownerofProcess, int priority, String memoryRequirement, String ioInformation) {
-        this.processId = processId;
-        this.state = state;
-        this.ownerofProcess = ownerofProcess;
-        this.priority = priority;
-        this.memoryRequirment = memoryRequirement;
+    public PCB(int processId, int priority, String status, String ownerOfProcess, String memoryRequirement, String ioInformation) {
+        super(processId, priority, status);
+        this.ownerOfProcess = ownerOfProcess;
+        this.memoryRequirement = memoryRequirement;
         this.ioInformation = ioInformation;
     }
 
 
-    public int getProcessId() {
-        return processId;
+    public String getOwnerOfProcess() {
+        return ownerOfProcess;
     }
 
-    public void setProcessId(int processId) {
-        this.processId = processId;
+    public void setOwnerOfProcess(String ownerOfProcess) {
+        this.ownerOfProcess = ownerOfProcess;
     }
 
-    public String getState() {
-        return state;
+    public String getMemoryRequirement() {
+        return memoryRequirement;
     }
 
-    public void setState(String state) {
-        this.state = state;
-    }
-
-    public String getOwnerofProcess() {
-        return ownerofProcess;
-    }
-
-    public void setOwnerofProcess(String ownerofProcess) {
-        this.ownerofProcess = ownerofProcess;
-    }
-
-    public int getPriority() {
-        return priority;
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
-
-    public String getMemoryRequirment() {
-        return memoryRequirment;
-    }
-
-    public void setMemoryRequirment(String memoryRequirment) {
-        this.memoryRequirment = memoryRequirment;
+    public void setMemoryRequirement(String memoryRequirement) {
+        this.memoryRequirement = memoryRequirement;
     }
 
     public String getIoInformation() {
@@ -65,4 +35,5 @@ public class PCB {
     public void setIoInformation(String ioInformation) {
         this.ioInformation = ioInformation;
     }
+
 }

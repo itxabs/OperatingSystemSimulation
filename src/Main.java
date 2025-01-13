@@ -5,15 +5,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.time.LocalTime;
 
 public class Main extends JFrame {
 
+        private Schedular schedular = new Schedular();
     Main(){
 
         setTitle("Operating System Simulation");
         setSize(900, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+       // setExtendedState(JFrame.MAXIMIZED_BOTH);
         getContentPane().setBackground(new Color(35, 61, 77));
         setLocationRelativeTo(null);
 
@@ -90,6 +91,7 @@ public class Main extends JFrame {
             });
 
             mainPanel.add(button);
+
         }
     }
 
@@ -101,12 +103,17 @@ public class Main extends JFrame {
     }
 
     private void memoryManagement() {
+        MemoryManagement memoryManagement = new MemoryManagement();
+        getContentPane().removeAll();
+        getContentPane().add(memoryManagement);
+        getContentPane().revalidate();
         
     }
 
     private void processManagement() {
-        ProcessManagement processManagement = new ProcessManagement();
+        ProcessManagement processManagement = new ProcessManagement(schedular);
         getContentPane().removeAll();
+        //setExtendedState(JFrame.MAXIMIZED_BOTH);
         getContentPane().add(processManagement);
         getContentPane().revalidate();
     }
@@ -114,6 +121,7 @@ public class Main extends JFrame {
 
     public static void main(String[] args) {
         new Main().setVisible(true);
+
     }
 }
 
