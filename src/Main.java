@@ -8,7 +8,7 @@ import java.awt.event.MouseEvent;
 
 public class Main extends JFrame {
 
-        private Schedular schedular = new Schedular();
+        private static Schedular schedular = new Schedular();
     Main(){
 
         setTitle("Operating System Simulation");
@@ -103,7 +103,7 @@ public class Main extends JFrame {
     }
 
     private void memoryManagement() {
-        MemoryManagement memoryManagement = new MemoryManagement();
+        MemoryManagement memoryManagement = new MemoryManagement(schedular);
         getContentPane().removeAll();
         getContentPane().add(memoryManagement);
         getContentPane().revalidate();

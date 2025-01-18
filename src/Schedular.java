@@ -1,82 +1,5 @@
-//import java.util.LinkedList;
-//import java.util.Queue;
-//
-//public class Schedular extends AbstractSchedular {
-//
-//    private Queue<process> readyQueue;
-//    private Queue<process> blockedQueue;
-//    private Queue<process> suspendedQueue;
-//    private Queue<process> newQueue;
-//
-//
-//    public Schedular() {
-//        this.readyQueue = new LinkedList<>();
-//        this.blockedQueue = new LinkedList<>();
-//        this.suspendedQueue = new LinkedList<>();
-//        this.newQueue = new LinkedList<>();
-//    }
-//
-//
-//    @Override
-//    public void addToReadyQueue(PCB p) {
-//        readyQueue.add(p);
-//    }
-//
-//    @Override
-//    public void suspendProcess(int id) {
-//        for (process p : readyQueue) {
-//            if (p.getProcessId() == id) {
-//                readyQueue.remove(p);
-//                suspendedQueue.add(p);
-//                System.out.println("Suspended Process: " + p.getArrivalTime());
-//                break;
-//            }
-//        }
-//    }
-//
-//
-//    @Override
-//    public void resumeProcess(PCB p) {
-//        for (process process : suspendedQueue) {
-//            if (process.getProcessId() == p.getProcessId()) {
-//                suspendedQueue.remove(p);
-//                readyQueue.add(p);
-//                System.out.println("Suspended Process: " + p.getArrivalTime());
-//                break;
-//            }
-//        }
-//    }
-//
-//    @Override
-//    public void dispatchNextProcess() {
-//
-//    }
-//
-//    @Override
-//    public void addToNewQueue(PCB p) {
-//        newQueue.add(p);
-//    }
-//
-//
-//    public void moveToBlocked(PCB p) {
-//
-//    }
-//    public void terminateProcess(PCB p,int id) {
-//        if ("Suspended".equals(p.getStatus())){
-//            suspendedQueue.removeIf(q -> q.getProcessId() == id);
-//
-//        }else {
-//            readyQueue.removeIf(q -> q.getProcessId() == id);
-//        }
-//    }
-//
-//
-//}
 
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Schedular extends AbstractSchedular {
 
@@ -92,34 +15,53 @@ public class Schedular extends AbstractSchedular {
         this.newQueue = new LinkedList<>();
     }
 
-    @Override
-    public void addToReadyQueue(PCB p) {
-        readyQueue.add(p);  // This is fine because readyQueue is of type Queue<PCB>
-    }
 
     @Override
-    public void suspendProcess(int id) {
-        PCB targetProcess = findAndRemoveProcess(readyQueue, id);  // Use PCB instead of process
-        if (targetProcess != null) {
-            targetProcess.setStatus("Suspended");
-            suspendedQueue.add(targetProcess);
+    public boolean suspendProcess(int id) {
+
+        PCB targetProcess = null;
+
+        if (readyQueue.stream().anyMatch(p -> p.getProcessId() == id)) {
+            targetProcess = findAndRemoveProcess(newQueue, id);
         }
+        if (blockedQueue.stream().anyMatch(p -> p.getProcessId() == id)) {
+            targetProcess = findAndRemoveProcess(blockedQueue, id);
+        }
+        if (newQueue.stream().anyMatch(p -> p.getProcessId() == id)) {
+            targetProcess = findAndRemoveProcess(newQueue, id);
+        }
+
+        if (targetProcess != null) {
+            targetProcess.setStatus("Suspended");  // Update status
+            suspendedQueue.add(targetProcess);  // Move to suspended queue
+            return true;
+        }
+        return false;  // If the process was not found, return false
     }
 
     @Override
-    public void resumeProcess(PCB p) {
-        PCB targetProcess = findAndRemoveProcess(suspendedQueue, p.getProcessId());  // Use PCB instead of process
+    public boolean resumeProcess(int  id) {
+
+        PCB targetProcess = null;
+
+        if (suspendedQueue.stream().anyMatch(p -> p.getProcessId() == id)) {
+            targetProcess = findAndRemoveProcess(suspendedQueue, id);
+        }
+
         if (targetProcess != null) {
             targetProcess.setStatus("Ready");
             readyQueue.add(targetProcess);
+            System.out.println("Added to Ready Queue: " + targetProcess);
+            return true;
         }
+        return false;
     }
 
 
     @Override
     public void dispatchNextProcess() {
         if (!readyQueue.isEmpty()) {
-            process nextProcess = readyQueue.poll();
+            PCB nextProcess = readyQueue.poll();
             nextProcess.setStatus("Running");
             System.out.println("Dispatched Process: " + nextProcess.getProcessId());
         } else {
@@ -137,7 +79,51 @@ public class Schedular extends AbstractSchedular {
         if (targetProcess != null) {
             targetProcess.setStatus("Blocked");
             blockedQueue.add(targetProcess);
+            System.out.println(getAllProcesses());
         }
+    }
+
+    @Override
+    public boolean BlockProcess(int id) {
+
+        PCB targetProcess = null;
+
+        if (readyQueue.stream().anyMatch(p -> p.getProcessId() == id)) {
+            targetProcess = findAndRemoveProcess(readyQueue, id);
+        }
+
+        if (targetProcess != null) {
+            targetProcess.setStatus("Blocked");
+            blockedQueue.add(targetProcess);
+
+            System.out.println("Process " + id + " is now Blocked.");
+            return true;
+        }else {
+            System.out.println("Process " + id + " is not Blocked.");
+        }
+        return false;
+
+    }
+
+    @Override
+    public boolean WakeupProcess(int id){
+
+        PCB targetProcess = null;
+
+        if (blockedQueue.stream().anyMatch(p -> p.getProcessId() == id)) {
+            targetProcess = findAndRemoveProcess(blockedQueue, id);
+        }
+
+        if (targetProcess != null) {
+            targetProcess.setStatus("Ready");
+            readyQueue.add(targetProcess);
+
+            System.out.println("Process " + id + " is now ready to be executed.");
+            return true;
+        } else {
+            System.out.println("Process with ID " + id + " not found in Blocked Queue.");
+        }
+        return false;
     }
 
     public void terminateProcess(PCB p, int id) {
@@ -148,15 +134,17 @@ public class Schedular extends AbstractSchedular {
         }
     }
 
-    public void removeProcess(int processID) {
-        if (removeFromQueue(readyQueue, processID) ||
-                removeFromQueue(blockedQueue, processID) ||
-                removeFromQueue(suspendedQueue, processID) ||
-                removeFromQueue(newQueue, processID)) {
+    public boolean destroyProcess(int processID) {
+
+        if (removeFromQueue(suspendedQueue, processID)) {
             System.out.println("Process " + processID + " removed successfully.");
-        } else {
+            return true;
+        }
+        else {
+
             System.out.println("Process " + processID + " not found.");
         }
+        return false;
     }
 
     public boolean updateProcessStatus(int processID, String newStatus) {
@@ -177,16 +165,86 @@ public class Schedular extends AbstractSchedular {
         return false;
     }
 
-    public process dispatch() {
-        if (!readyQueue.isEmpty()) {
-            process nextProcess = readyQueue.poll();
-            if (nextProcess != null) {
-                nextProcess.setStatus("Running");
-            }
-            return nextProcess;
+    public void FCFS(ProcessManagement processManagement) {
+        // Step 1: Sort the processes based on arrival time
+        List<PCB> sortedProcesses = new ArrayList<>(readyQueue);
+        sortedProcesses.sort(Comparator.comparingInt(PCB::getArrivalTime)); // Sort by arrival time
+
+        // Step 2: Clear the ready queue
+        readyQueue.clear();
+
+        // Step 3: Add sorted processes back to the ready queue
+        for (PCB process : sortedProcesses) {
+            process.setStatus("Ready"); // Set the status to Ready
+            readyQueue.add(process); // Add to readyQueue
+            processManagement.refreshTable(); // Refresh the table after updating status
         }
-        return null;
+
+        // Step 4: Process each PCB in the ready queue
+        while (!readyQueue.isEmpty()) {
+            PCB process = readyQueue.poll(); // Get and remove the first process in the queue
+
+            // Set the process status to "Running"
+            process.setStatus("Running");
+            System.out.println("Process " + process.getProcessId() + " is running.");
+            processManagement.refreshTable(); // Refresh the table to reflect the "Running" state
+
+            // Simulate process execution
+            try {
+                Thread.sleep(1000); // Simulate execution time
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            // Set the process status to "Finished"
+            process.setStatus("Finished");
+            System.out.println("Process " + process.getProcessId() + " is finished.");
+            processManagement.refreshTable(); // Refresh the table to reflect the "Finished" state
+
+            // Remove the process from the queue (already removed using poll)
+        }
     }
+
+
+    public void PriorityScheduling(ProcessManagement processManagement) {
+
+        List<PCB> sortedList = new ArrayList<>(readyQueue);
+
+        sortedList.sort(Comparator.comparingInt(PCB::getPriority).reversed());
+
+
+        readyQueue.clear();
+
+        System.out.println("readyQueue is empty");
+        //System.out.println(readyQueue.poll().getProcessId());
+
+        for (PCB process : sortedList) {
+            process.setStatus("Ready"); // Set status to Ready
+            readyQueue.add(process);
+            processManagement.refreshTable(); // Refresh the table after adding
+        }
+
+        // Step 5: Process each PCB in the ready queue
+        while (!readyQueue.isEmpty()) {
+            PCB process = readyQueue.poll(); // Remove the first process from the queue
+
+            // Set process to Running state and refresh
+            process.setStatus("Running");
+            System.out.println("Process " + process.getProcessId() + " is now " + process.getStatus() + " having "+process.getPriority() + "Priority");
+            processManagement.refreshTable();
+
+            // Simulate process completion by setting it to Finished
+            process.setStatus("Finished");
+            System.out.println("Process " + process.getProcessId() + " is now " + process.getStatus());
+            processManagement.refreshTable();
+        }
+    }
+
+
+
+
+
+
 
     public List<PCB> getAllProcesses() {
         List<PCB> allProcesses = new ArrayList<>();
@@ -199,7 +257,30 @@ public class Schedular extends AbstractSchedular {
         // Return the combined list of PCB objects
         return allProcesses;
     }
+//for debugging
+    public List<PCB> processinqueues() {
+        List<PCB> allProcesses = new ArrayList<>();
+        // Add all processes from each queue directly
+        //allProcesses.addAll(readyQueue);
+        //allProcesses.addAll(blockedQueue);
+        allProcesses.addAll(suspendedQueue);
+        //allProcesses.addAll(newQueue);
 
+        // Return the combined list of PCB objects
+        return allProcesses;
+    }
+
+    public List<PCB> processinqueuer() {
+        List<PCB> allProcesses = new ArrayList<>();
+        // Add all processes from each queue directly
+        allProcesses.addAll(readyQueue);
+        //allProcesses.addAll(blockedQueue);
+        //allProcesses.addAll(suspendedQueue);
+        //allProcesses.addAll(newQueue);
+
+        // Return the combined list of PCB objects
+        return allProcesses;
+    }
 
 
     private PCB findProcess(int processID) {
